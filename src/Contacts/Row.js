@@ -11,11 +11,21 @@ import {
 } from "@material-ui/core";
 
 const useStyle = makeStyles(theme => ({
+  root: {
+    [theme.breakpoints.up(theme.breakpoints.values.md)]: {
+      width: theme.breakpoints.values.md,
+      margin: "auto"
+    }
+  },
   itemText: {
-    width: theme.breakpoints.values.md / 4 - 10
+    width: theme.breakpoints.values.md / 4 - 10,
+    padding: `0 ${theme.spacing(1)}px`,
+    overflow: "hidden",
+    textOverflow: "ellipsis"
   },
   headerNameWidth: {
-    width: theme.breakpoints.values.md / 4 + 40
+    width: theme.breakpoints.values.md / 4 + 40,
+    padding: `0 ${theme.spacing(1)}px`
   }
 }));
 
@@ -23,8 +33,7 @@ function Row(props) {
   const classes = useStyle();
   return (
     <ListItem
-      // style={props.style}
-      className={["container"].join(" ")}
+      className={classes.root}
       button={props.button}
       onClick={props.onClick}
       divider={!props.image}
@@ -35,7 +44,6 @@ function Row(props) {
         </ListItemAvatar>
       )}
       <ListItemText
-        // inset={!props.image}
         className={props.image ? classes.itemText : classes.headerNameWidth}
         primary={props.name}
         secondary={!props.isDesktop && props.image ? props.phoneNumber : null}

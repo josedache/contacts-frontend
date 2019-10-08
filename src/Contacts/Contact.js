@@ -10,16 +10,15 @@ function Contact(props) {
   return (
     <div style={props.style}>
       <Row
-      button
-      // style={props.style}
-      isDesktop={props.isDesktop}
-      image={() => <Avatar>{fullName.charAt(0)}</Avatar>}
-      name={fullName}
-      phoneNumber={phoneNumber}
-      email={email}
-      address={address}
-      onClick={props.showDetail}
-    />
+        button
+        isDesktop={props.isDesktop}
+        image={() => <Avatar>{fullName.charAt(0)}</Avatar>}
+        name={fullName}
+        phoneNumber={phoneNumber}
+        email={email}
+        address={address}
+        onClick={props.showDetail}
+      />
     </div>
   );
 }
