@@ -17,6 +17,10 @@ const styles = theme =>
       }
     },
     toolbar: {
+      [theme.breakpoints.up(theme.breakpoints.values.md)]: {
+        width: theme.breakpoints.values.md,
+        margin: "auto"
+      }
     },
     extendedIcon: {
       marginRight: theme.spacing(1)
