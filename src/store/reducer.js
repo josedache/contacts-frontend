@@ -1,10 +1,6 @@
 import * as types from "./types";
 
-const initialState = {
-  contacts: []
-};
-
-function reducer(state = initialState, { payload, type }) {
+export function reducer(state, { payload, type }) {
   switch (type) {
     case types.STORE_CONTACTS:
       return { ...state, contacts: payload };
@@ -12,6 +8,8 @@ function reducer(state = initialState, { payload, type }) {
       return { ...state, contacts: store(payload, [...state.contacts]) };
     case types.REMOVE_CONTACT:
       return { ...state, contacts: remove(payload, [...state.contacts]) };
+    case types.STORE_TOKEN:
+      return { ...state, token: payload };
     default:
       return state;
   }
@@ -19,8 +17,6 @@ function reducer(state = initialState, { payload, type }) {
 
 const store = (newContact, contacts) =>
   sort([...remove(newContact.uid, contacts), newContact]);
-const sort = contacts => contacts;
+const sort = (contacts) => contacts;
 const remove = (uid, contacts) =>
-  contacts.filter(contact => contact.uid !== uid);
-
-export default reducer;
+  contacts.filter((contact) => contact.uid !== uid);

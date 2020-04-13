@@ -1,21 +1,20 @@
 import React from "react";
 import { MuiThemeProvider, CssBaseline } from "@material-ui/core";
-import theme from "./styles/theme";
-import Layout from "./Layout";
-import { Provider } from "react-redux";
-import store from "./store";
+import theme from "./theme";
+import Navigator from "./navigator/Navigator";
+import {StoreProvider} from './store'
 import { BrowserRouter as Router } from "react-router-dom";
 
 function App() {
   return (
-    <Provider store={store}>
+    <StoreProvider>
       <Router>
         <MuiThemeProvider theme={theme}>
           <CssBaseline />
-          <Layout />
+          <Navigator />
         </MuiThemeProvider>
       </Router>
-    </Provider>
+    </StoreProvider>
   );
 }
 

@@ -1,94 +1,91 @@
-import React, { useState } from "react";
+import React, { useState, memo, useEffect, useMemo } from "react";
 import {
   Grid,
   List,
   ListItem,
-  ListItemAvatar,
   ListItemText,
   ListItemIcon,
   Card,
   Avatar,
   makeStyles,
   Typography,
-  CircularProgress,
   IconButton,
-  useMediaQuery
 } from "@material-ui/core";
 import PhoneIcon from "@material-ui/icons/Phone";
 import EmailIcon from "@material-ui/icons/Email";
 import AddressIcon from "@material-ui/icons/LocationCity";
-import NameIcon from "@material-ui/icons/Contacts";
 import DeleteIcon from "@material-ui/icons/Delete";
 import EditIcon from "@material-ui/icons/Edit";
-import CreateEdit from "./CreateEdit";
-import { connect } from "react-redux";
-import Contacts from "./Contacts";
-import ContactModal from "./Modal";
-import { deleteContact } from "../store/actions";
+import { EDIT_ROUTE } from "./ContactCreateEdit";
+import { CONTACTS_ROUTE } from "./Contacts";
+import { useSingleAppDispatch, useAppState } from "../store/config";
+import { apiDeleteContact } from "../api/backend";
+import { useIsDesktop } from "../utils/hooks";
+import { useParams } from "react-router-dom";
 
-function Details({
-  contacts,
-  deleteContact,
-  setDetailModal,
-  openEditModal,
-  contactIndex,
-  match,
-  history
-}) {
+export const CONTACT_DETAIL_ROUTE = "/details/:index";
+
+export function ContactDetail(props) {
+  const { closeDetailModal, openEditModal, contactIndex, history } = props;
   const classes = useStyle();
   const [isDeleting, setDeleting] = useState(false);
-  const isDesktop = useMediaQuery(theme =>
-    theme.breakpoints.up(theme.breakpoints.values.sm)
+  const { index: paramIndex } = useParams();
+  const isDesktop = useIsDesktop();
+  const contacts = useAppState(({ contacts }) => contacts);
+  const removeContact = useSingleAppDispatch("REMOVE_CONTACT");
+  const contact = useMemo(
+    () =>
+      !isDesktop && paramIndex ? contacts[paramIndex] : contacts[contactIndex],
+    [contactIndex, contacts, isDesktop, paramIndex]
   );
 
-  // when resized from mobile to desktop
-  if (isDesktop && history) {
-    history.replace(Contacts.routeName);
-    return null;
-  } else if (isDesktop && !contacts.length) {
-    setDetailModal(false);
-    return null;
-  } else if (!isDesktop) {
-    // when reloaded on mobile
-    if (!contacts.length) {
-      history.replace(Contacts.routeName);
-      return null;
+  /**
+   * Route to Contact page -
+   * when resized from mobile to desktop, or
+   * when reloading on mobile and no contacts
+   */
+  useEffect(() => {
+    if ((isDesktop && history) || (history && !contact)) {
+      history.push(CONTACTS_ROUTE);
     }
-    // when resized from desktop to mobile
-    else if (setDetailModal) {
-      setDetailModal(false);
-      return null;
+  }, [contact, history, isDesktop]);
+
+  const fullName = useMemo(() => {
+    if (contact) {
+      const { firstName, lastName } = contact;
+      return `${firstName} ${lastName}`;
     }
+    return "";
+  }, [contact]);
+
+  /**
+   * when app is reloaded on mobile returning null
+   * makes useEffect route to contact screen
+   */
+  if (!contact) {
+    return null;
   }
 
   const Container = isDesktop ? Card : "div";
 
-  const contact = isDesktop
-    ? contacts[contactIndex]
-    : contacts[match.params.index];
-  const fullName = contact.firstName
-    ? contact.firstName.concat(" ", contact.lastName || "")
-    : contact.lastName;
-
-  function editContact() {
+  function editContact(e) {
     isDesktop
       ? openEditModal(contactIndex)
-      : history.push(
-          CreateEdit.routeName[1].replace(":index", match.params.index)
-        );
+      : history.push(EDIT_ROUTE.replace(":index", paramIndex));
   }
 
-  function removeContact() {
+  function deleteContact() {
     // setDeleting(true);
-    deleteContact(contact.uid).then(
+    apiDeleteContact(contact.uid).then(
       () => {
+        removeContact(contact.uid);
         if (isDesktop) {
-          setDetailModal(false);
+          closeDetailModal();
         } else {
-          history.push(Contacts.routeName);
+          history.push(CONTACTS_ROUTE);
         }
       },
-      err => {
+      (err) => {
         console.log(err);
         // setDeleting(false);
       }
@@ -96,7 +93,7 @@ function Details({
   }
 
   return (
-    <Container>
+    <Container onClick={e => e.stopPropagation()}>
       <Grid container>
         <Grid
           item
@@ -114,7 +111,7 @@ function Details({
           </IconButton>
           <IconButton
             className={[classes.actionIcon, classes.deleteIcon].join(" ")}
-            onClick={removeContact}
+            onClick={deleteContact}
           >
             <DeleteIcon />
           </IconButton>
@@ -148,46 +145,38 @@ function Details({
           </List>
         </Grid>
       </Grid>
-      {/* <CircularProgress /> */}
     </Container>
   );
 }
 
-const useStyle = makeStyles(theme => ({
+const useStyle = makeStyles((theme) => ({
   contactImageContainer: {
     height: 200,
     backgroundColor: theme.palette.primary.main,
-    position: "relative"
+    position: "relative",
   },
   contactAvater: {
     margin: 10,
     width: 100,
     height: 100,
-    ...theme.typography.h2
+    ...theme.typography.h2,
   },
   name: {
-    color: theme.palette.common.white
+    color: theme.palette.common.white,
   },
   actionIcon: {
     position: "absolute",
     top: 0,
     margin: theme.spacing(1),
-    color: theme.palette.common.white
+    color: theme.palette.common.white,
   },
   editIcon: {
-    right: 0
+    right: 0,
   },
   deleteIcon: {
     left: 0,
-    color: theme.palette.secondary.light
-  }
+    color: theme.palette.secondary.light,
+  },
 }));
 
-Details.routeName = "/details/:index";
-
-const mapStateToProps = ({ contacts }) => ({ contacts });
-
-export default connect(
-  mapStateToProps,
-  { deleteContact }
-)(Details);
+export default memo(ContactDetail, () => true);
